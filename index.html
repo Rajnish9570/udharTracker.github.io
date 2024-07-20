@@ -136,6 +136,57 @@
         .hidden {
             display: none;
         }
+
+
+
+
+/* Dark Mode Styles */
+
+#dark-mode-toggle{
+    padding: 5px;
+    margin: 10px;
+    background: none;
+    outline: none;
+    border:1px solid yellow;
+    font-size: 1.5rem;
+    
+}
+body.dark-mode {
+    background-color: #333;
+    color: #ddd;
+}
+
+body.dark-mode h2 {
+    color: #ddd;
+    text-shadow: 2px 2px black;
+}
+
+body.dark-mode .form-container input,
+body.dark-mode .form-container button,
+body.dark-mode .form-container select,
+body.dark-mode .record-form,
+body.dark-mode .customer-form,
+body.dark-mode .record-list {
+    background-color: #444;
+    color: #ddd;
+    border: 1px solid #555;
+}
+
+body.dark-mode .record-list li {
+    border-bottom: 1px solid #666;
+}
+
+body.dark-mode .remove-button {
+    background-color: darkred;
+}
+
+body.dark-mode .call-button {
+    background-color: darkblue;
+}
+
+
+
+        
         @media (max-width: 600px) {
             .record-form,
             .customer-form,
@@ -165,8 +216,12 @@
     </style>
 </head>
 <body>
+    
+    <button id="dark-mode-toggle" >🌙-🔆</button>
+    <hr>
     <h2>उधारTracker</h2>
     <p>Maintain your daily udhar records.</p>
+
 
     <div class="form-container">
         <div class="customer-form">
@@ -381,5 +436,26 @@
             }
         }
     </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCustomers();
+            applyDarkMode();
+        });
+    
+        function applyDarkMode() {
+            const isDarkMode = localStorage.getItem('darkMode') === 'true';
+            if (isDarkMode) {
+                document.body.classList.add('dark-mode');
+            }
+        }
+    
+        function toggleDarkMode() {
+            const isDarkMode = document.body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', isDarkMode);
+        }
+    
+        document.getElementById('dark-mode-toggle').addEventListener('click', toggleDarkMode);
+    </script>
+    
 </body>
 </html>
