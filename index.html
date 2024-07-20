@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Udhar Records</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #e0e0e0;
+            color: #333;
+            text-align: center;
+        }
+        h1 {
+            text-align: center;
+            color: #1a202c;
+            margin-bottom: 20px;
+            font-size: 3em;
+            text-shadow: 2px 2px #f0f0f0;
+        }
+        .form-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .form-container input,
+        .form-container button,
+        .form-container select {
+            margin: 5px;
+            padding: 10px;
+            font-size: 16px;
+            width: 100%;
+            max-width: 300px;
+            box-sizing: border-box;
+            border: none;
+            border-radius: 10px;
+            box-shadow: 3px 3px 5px rgba(0,0,0,0.2);
+        }
+        .form-container button {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .form-container button:hover {
+            transform: translateY(-3px);
+        }
+        .record-form,
+        .customer-form {
+            max-width: 600px;
+            width: 100%;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .record-form:hover,
+        .customer-form:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+        }
+        .record-list {
+            max-width: 600px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .record-list:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+        }
+        .record-list ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        .record-list li {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+        }
+        .record-list li:last-child {
+            border-bottom: none;
+        }
+        .total-amount {
+            font-weight: bold;
+            text-align: right;
+        }
+        .remove-button {
+            background-color: red;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 14px;
+            border-radius: 3px;
+            transition: transform 0.2s;
+        }
+        .remove-button:hover {
+            transform: translateY(-3px);
+        }
+        .call-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 14px;
+            border-radius: 3px;
+            margin-left: 10px;
+            transition: transform 0.2s;
+        }
+        .call-button:hover {
+            transform: translateY(-3px);
+        }
+        .call-button a {
+            color: white;
+            text-decoration: none;
+        }
+        .hidden {
+            display: none;
+        }
+        @media (max-width: 600px) {
+            .record-form,
+            .customer-form,
+            .record-list {
+                padding: 15px;
+            }
+            .record-list li {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .total-amount {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1> UdharTracker </h1>
+    <p>Maintain your daily udhar records.</p>
+
+    <div class="form-container">
+        <div class="customer-form">
+            <input type="text" id="new-customer" placeholder="New Customer Name">
+            <input type="text" id="customer-contact" placeholder="Contact Number">
+            <button onclick="addCustomer()">Add Customer</button>
+        </div>
+        <div class="record-form">
+            <select id="customer-select">
+                <option value="">Select Customer</option>
+            </select>
+            <input type="number" id="amount" placeholder="Amount" required>
+            <button onclick="addRecord()">Borrow</button>
+            <button onclick="addPayment()">Paid</button>
+        </div>
+    </div>
+
+    <div id="customer-sections"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCustomers();
+        });
+
+        function addCustomer() {
+            const newCustomer = document.getElementById('new-customer').value.trim();
+            const contactNumber = document.getElementById('customer-contact').value.trim();
+
+            if (newCustomer && contactNumber) {
+                let customers = JSON.parse(localStorage.getItem('customers')) || [];
+                if (!customers.some(c => c.name === newCustomer)) {
+                    customers.push({ name: newCustomer, contact: contactNumber });
+                    localStorage.setItem('customers', JSON.stringify(customers));
+
+                    const customerSelect = document.getElementById('customer-select');
+                    const option = document.createElement('option');
+                    option.value = newCustomer;
+                    option.text = newCustomer;
+                    customerSelect.add(option);
+
+                    createCustomerSection(newCustomer, contactNumber);
+
+                    document.getElementById('new-customer').value = '';
+                    document.getElementById('customer-contact').value = '';
+                } else {
+                    alert('Customer already exists.');
+                }
+            } else {
+                alert('Please enter a customer name and contact number.');
+            }
+        }
+
+        function addRecord() {
+            const customer = document.getElementById('customer-select').value;
+            const amount = parseFloat(document.getElementById('amount').value.trim());
+
+            if (customer && amount) {
+                const record = { amount, type: 'borrow', date: new Date().toLocaleDateString() };
+
+                let allRecords = JSON.parse(localStorage.getItem('udharRecords')) || {};
+                if (!allRecords[customer]) {
+                    allRecords[customer] = [];
+                }
+                allRecords[customer].push(record);
+                localStorage.setItem('udharRecords', JSON.stringify(allRecords));
+
+                appendRecordToCustomerList(customer, record);
+                updateTotalAmount(customer);
+
+                document.getElementById('amount').value = '';
+            } else {
+                alert('Please select a customer and enter a valid amount.');
+            }
+        }
+
+        function addPayment() {
+            const customer = document.getElementById('customer-select').value;
+            const amount = parseFloat(document.getElementById('amount').value.trim());
+
+            if (customer && amount) {
+                const record = { amount, type: 'payment', date: new Date().toLocaleDateString() };
+
+                let allRecords = JSON.parse(localStorage.getItem('udharRecords')) || {};
+                if (!allRecords[customer]) {
+                    allRecords[customer] = [];
+                }
+                allRecords[customer].push(record);
+                localStorage.setItem('udharRecords', JSON.stringify(allRecords));
+
+                appendRecordToCustomerList(customer, record);
+                updateTotalAmount(customer);
+
+                document.getElementById('amount').value = '';
+            } else {
+                alert('Please select a customer and enter a valid amount.');
+            }
+        }
+
+        function loadCustomers() {
+            const customers = JSON.parse(localStorage.getItem('customers')) || [];
+            const customerSelect = document.getElementById('customer-select');
+
+            customers.forEach(customer => {
+                const option = document.createElement('option');
+                option.value = customer.name;
+                option.text = customer.name;
+                customerSelect.add(option);
+
+                createCustomerSection(customer.name, customer.contact);
+            });
+
+            loadRecords();
+        }
+
+        function loadRecords() {
+            const allRecords = JSON.parse(localStorage.getItem('udharRecords')) || {};
+
+            for (const customer in allRecords) {
+                if (allRecords.hasOwnProperty(customer)) {
+                    allRecords[customer].forEach(record => {
+                        appendRecordToCustomerList(customer, record);
+                    });
+                    updateTotalAmount(customer);
+                }
+            }
+        }
+
+        function createCustomerSection(customerName, contactNumber) {
+            const customerSections = document.getElementById('customer-sections');
+            const section = document.createElement('div');
+            section.classList.add('record-list');
+            section.innerHTML = `
+                <h3>
+                    ${customerName}
+                    <span>(${contactNumber})</span>
+                    <button class="call-button"><a href="tel:${contactNumber}">Call</a></button>
+                    <button class="remove-button" onclick="removeCustomer('${customerName}')">Remove</button>
+                </h3>
+                <ul id="${customerName}-records" class="hidden"></ul>
+                <p id="${customerName}-total" class="total-amount hidden">Total Amount: ₹0</p>
+            `;
+            section.addEventListener('click', () => toggleDetails(customerName));
+            customerSections.appendChild(section);
+        }
+
+        function appendRecordToCustomerList(customer, record) {
+            const recordList = document.getElementById(`${customer}-records`);
+            const recordItem = document.createElement('li');
+            recordItem.textContent = `${record.type === 'borrow' ? 'Borrowed' : 'Paid'}: ₹${record.amount.toFixed(2)} on ${record.date}`;
+            recordList.appendChild(recordItem);
+        }
+
+        function updateTotalAmount(customer) {
+            const allRecords = JSON.parse(localStorage.getItem('udharRecords')) || {};
+            const customerRecords = allRecords[customer] || [];
+            const totalAmount = customerRecords.reduce((total, record) => {
+                return record.type === 'borrow' ? total + record.amount : total - record.amount;
+            }, 0);
+            const totalAmountElement = document.getElementById(`${customer}-total`);
+            totalAmountElement.textContent = `Total Amount: ₹${totalAmount.toFixed(2)}`;
+            if (totalAmount < 0) {
+                totalAmountElement.textContent += ' (Paid in Advance)';
+            }
+        }
+
+        function removeCustomer(customer) {
+            if (confirm(`Are you sure you want to remove ${customer}?`)) {
+                let customers = JSON.parse(localStorage.getItem('customers')) || [];
+                customers = customers.filter(c => c.name !== customer);
+                localStorage.setItem('customers', JSON.stringify(customers));
+
+                let allRecords = JSON.parse(localStorage.getItem('udharRecords')) || {};
+                delete allRecords[customer];
+                localStorage.setItem('udharRecords', JSON.stringify(allRecords));
+
+                document.getElementById(`${customer}-records`).parentElement.remove();
+                const customerSelect = document.getElementById('customer-select');
+                for (let i = 0; i < customerSelect.options.length; i++) {
+                    if (customerSelect.options[i].value === customer) {
+                        customerSelect.remove(i);
+                        break;
+                    }
+                }
+            }
+        }
+
+        function toggleDetails(customer) {
+            const recordList = document.getElementById(`${customer}-records`);
+            const totalAmountElement = document.getElementById(`${customer}-total`);
+            if (recordList.classList.contains('hidden')) {
+                recordList.classList.remove('hidden');
+                totalAmountElement.classList.remove('hidden');
+            } else {
+                recordList.classList.add('hidden');
+                totalAmountElement.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
