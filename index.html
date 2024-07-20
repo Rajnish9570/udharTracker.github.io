@@ -11,9 +11,8 @@
             padding: 20px;
             background-color: #fff;
             color: #333;
-            
         }
-        h2{
+        h2 {
             text-align: center;
             color: #1a202c;
             margin-bottom: 20px;
@@ -49,7 +48,6 @@
         }
         .record-form,
         .customer-form {
-        
             width: 60%;
             padding: 20px;
             background-color: #fff;
@@ -64,9 +62,8 @@
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
         }
         .record-list {
-        
-            width:50%;
-            text-align:center;
+            width: 50%;
+            text-align: center;
             padding: 20px;
             background-color: #fff;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -120,12 +117,19 @@
             margin-left: 10px;
             transition: transform 0.2s;
         }
-        .call-button:hover {
-            transform: translateY(-3px);
-        }
         .call-button a {
             color: white;
             text-decoration: none;
+        }
+        .call-button.disabled {
+            background-color: grey;
+            cursor: not-allowed;
+        }
+        .phone-number {
+            color: blue;
+        }
+        .not-available {
+            color: lightgrey;
         }
         .hidden {
             display: none;
@@ -144,22 +148,22 @@
                 text-align: left;
             }
             .form-container input,
-        .form-container button,
-        .form-container select {
-            width: 100%;
-        }
+            .form-container button,
+            .form-container select {
+                width: 100%;
+            }
             .record-form,
-        .customer-form {
-            width: 100%;
+            .customer-form {
+                width: 100%;
             }
             .record-list {
-            width: 95%;
+                width: 95%;
             }
         }
     </style>
 </head>
 <body>
-    <h2>उधारTracker </h2>
+    <h2>उधारTracker</h2>
     <p>Maintain your daily udhar records.</p>
 
     <div class="form-container">
@@ -188,10 +192,10 @@
             const newCustomer = document.getElementById('new-customer').value.trim();
             const contactNumber = document.getElementById('customer-contact').value.trim();
 
-            if (newCustomer && contactNumber) {
+            if (newCustomer) {
                 let customers = JSON.parse(localStorage.getItem('customers')) || [];
                 if (!customers.some(c => c.name === newCustomer)) {
-                    customers.push({ name: newCustomer, contact: contactNumber });
+                    customers.push({ name: newCustomer, contact: contactNumber || 'Not Available' });
                     localStorage.setItem('customers', JSON.stringify(customers));
 
                     const customerSelect = document.getElementById('customer-select');
@@ -200,7 +204,7 @@
                     option.text = newCustomer;
                     customerSelect.add(option);
 
-                    createCustomerSection(newCustomer, contactNumber);
+                    createCustomerSection(newCustomer, contactNumber || 'Not Available');
 
                     document.getElementById('new-customer').value = '';
                     document.getElementById('customer-contact').value = '';
@@ -208,7 +212,7 @@
                     alert('Customer already exists.');
                 }
             } else {
-                alert('Please enter a customer name and contact number.');
+                alert('Please enter a customer name.');
             }
         }
 
@@ -259,31 +263,41 @@
         }
 
         function loadCustomers() {
-            const customers = JSON.parse(localStorage.getItem('customers')) || [];
-            const customerSelect = document.getElementById('customer-select');
+            try {
+                const customers = JSON.parse(localStorage.getItem('customers')) || [];
+                const customerSelect = document.getElementById('customer-select');
 
-            customers.forEach(customer => {
-                const option = document.createElement('option');
-                option.value = customer.name;
-                option.text = customer.name;
-                customerSelect.add(option);
+                customers.forEach(customer => {
+                    const option = document.createElement('option');
+                    option.value = customer.name;
+                    option.text = customer.name;
+                    customerSelect.add(option);
 
-                createCustomerSection(customer.name, customer.contact);
-            });
+                    createCustomerSection(customer.name, customer.contact);
+                });
 
-            loadRecords();
+                loadRecords();
+            } catch (error) {
+                console.error('Error loading customers:', error);
+                alert('Failed to load customers.');
+            }
         }
 
         function loadRecords() {
-            const allRecords = JSON.parse(localStorage.getItem('udharRecords')) || {};
+            try {
+                const allRecords = JSON.parse(localStorage.getItem('udharRecords')) || {};
 
-            for (const customer in allRecords) {
-                if (allRecords.hasOwnProperty(customer)) {
-                    allRecords[customer].forEach(record => {
-                        appendRecordToCustomerList(customer, record);
-                    });
-                    updateTotalAmount(customer);
+                for (const customer in allRecords) {
+                    if (allRecords.hasOwnProperty(customer)) {
+                        allRecords[customer].forEach(record => {
+                            appendRecordToCustomerList(customer, record);
+                        });
+                        updateTotalAmount(customer);
+                    }
                 }
+            } catch (error) {
+                console.error('Error loading records:', error);
+                alert('Failed to load records.');
             }
         }
 
@@ -294,8 +308,10 @@
             section.innerHTML = `
                 <h3>
                     ${customerName}
-                    <span>(${contactNumber})</span>
-                    <button class="call-button"><a href="tel:${contactNumber}">Call</a></button>
+                    <span class="${contactNumber === 'Not Available' ? 'not-available' : 'phone-number'}">(${contactNumber})</span>
+                    <button class="call-button ${contactNumber && contactNumber !== 'Not Available' ? '' : 'disabled'}">
+                        <a href="${contactNumber && contactNumber !== 'Not Available' ? `tel:${contactNumber}` : '#'}">Call</a>
+                    </button>
                     <button class="remove-button" onclick="removeCustomer('${customerName}')">Remove</button>
                 </h3>
                 <ul id="${customerName}-records" class="hidden"></ul>
@@ -327,21 +343,26 @@
 
         function removeCustomer(customer) {
             if (confirm(`Are you sure you want to remove ${customer}?`)) {
-                let customers = JSON.parse(localStorage.getItem('customers')) || [];
-                customers = customers.filter(c => c.name !== customer);
-                localStorage.setItem('customers', JSON.stringify(customers));
+                try {
+                    let customers = JSON.parse(localStorage.getItem('customers')) || [];
+                    customers = customers.filter(c => c.name !== customer);
+                    localStorage.setItem('customers', JSON.stringify(customers));
 
-                let allRecords = JSON.parse(localStorage.getItem('udharRecords')) || {};
-                delete allRecords[customer];
-                localStorage.setItem('udharRecords', JSON.stringify(allRecords));
+                    let allRecords = JSON.parse(localStorage.getItem('udharRecords')) || {};
+                    delete allRecords[customer];
+                    localStorage.setItem('udharRecords', JSON.stringify(allRecords));
 
-                document.getElementById(`${customer}-records`).parentElement.remove();
-                const customerSelect = document.getElementById('customer-select');
-                for (let i = 0; i < customerSelect.options.length; i++) {
-                    if (customerSelect.options[i].value === customer) {
-                        customerSelect.remove(i);
-                        break;
+                    document.getElementById(`${customer}-records`).parentElement.remove();
+                    const customerSelect = document.getElementById('customer-select');
+                    for (let i = 0; i < customerSelect.options.length; i++) {
+                        if (customerSelect.options[i].value === customer) {
+                            customerSelect.remove(i);
+                            break;
+                        }
                     }
+                } catch (error) {
+                    console.error('Error removing customer:', error);
+                    alert('Failed to remove customer.');
                 }
             }
         }
