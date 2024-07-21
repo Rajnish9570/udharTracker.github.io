@@ -12,9 +12,9 @@
             background-color: #fff;
             color: #333;
         }
-        p {
-            text-align: center;
-        }
+    p{
+     text-align: center;
+    }
         h2 {
             text-align: center;
             color: #1a202c;
@@ -162,39 +162,9 @@
                 width: 95%;
             }
         }
-
-        /* Dark Mode Styles */
-        body.dark-mode {
-            background-color: #333;
-            color: #ddd;
-        }
-        body.dark-mode h2 {
-            color: #ddd;
-            text-shadow: 2px 2px black;
-        }
-        body.dark-mode .form-container input,
-        body.dark-mode .form-container button,
-        body.dark-mode .form-container select,
-        body.dark-mode .record-form,
-        body.dark-mode .customer-form,
-        body.dark-mode .record-list {
-            background-color: #444;
-            color: #ddd;
-            border: 1px solid #555;
-        }
-        body.dark-mode .record-list li {
-            border-bottom: 1px solid #666;
-        }
-        body.dark-mode .remove-button {
-            background-color: darkred;
-        }
-        body.dark-mode .call-button {
-            background-color: darkblue;
-        }
     </style>
 </head>
 <body>
-    <button id="dark-mode-toggle">Toggle Dark Mode</button>
     <h2>उधारTracker</h2>
     <p>Maintain your daily udhar records.</p>
 
@@ -218,22 +188,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             loadCustomers();
-            applyDarkMode();
         });
-
-        function applyDarkMode() {
-            const isDarkMode = localStorage.getItem('darkMode') === 'true';
-            if (isDarkMode) {
-                document.body.classList.add('dark-mode');
-            }
-        }
-
-        function toggleDarkMode() {
-            const isDarkMode = document.body.classList.toggle('dark-mode');
-            localStorage.setItem('darkMode', isDarkMode);
-        }
-
-        document.getElementById('dark-mode-toggle').addEventListener('click', toggleDarkMode);
 
         function addCustomer() {
             const newCustomer = document.getElementById('new-customer').value.trim();
@@ -309,77 +264,120 @@
             }
         }
 
-        function appendRecordToCustomerList(customer, record) {
-            const customerList = document.getElementById(customer + '-list');
-            const listItem = document.createElement('li');
-            listItem.innerHTML = `${record.date} - ${record.type === 'borrow' ? 'Borrowed: ' : 'Paid: '}₹${record.amount.toFixed(2)}
-                <button class="remove-button" onclick="removeRecord('${customer}', ${customerList.children.length})">Remove</button>`;
-            customerList.appendChild(listItem);
-        }
-
-        function removeRecord(customer, index) {
-            let allRecords = JSON.parse(localStorage.getItem('udharRecords')) || {};
-            allRecords[customer].splice(index, 1);
-            localStorage.setItem('udharRecords', JSON.stringify(allRecords));
-
-            const customerList = document.getElementById(customer + '-list');
-            customerList.removeChild(customerList.children[index]);
-
-            updateTotalAmount(customer);
-        }
-
-        function updateTotalAmount(customer) {
-            let allRecords = JSON.parse(localStorage.getItem('udharRecords')) || {};
-            let totalAmount = 0;
-            if (allRecords[customer]) {
-                totalAmount = allRecords[customer].reduce((sum, record) => {
-                    return sum + (record.type === 'borrow' ? record.amount : -record.amount);
-                }, 0);
-            }
-            document.getElementById(customer + '-total').innerText = `Total: ₹${totalAmount.toFixed(2)}`;
-        }
-
         function loadCustomers() {
-            const customers = JSON.parse(localStorage.getItem('customers')) || [];
-            const customerSelect = document.getElementById('customer-select');
+            try {
+                const customers = JSON.parse(localStorage.getItem('customers')) || [];
+                const customerSelect = document.getElementById('customer-select');
 
-            customers.forEach(customer => {
-                const option = document.createElement('option');
-                option.value = customer.name;
-                option.text = customer.name;
-                customerSelect.add(option);
+                customers.forEach(customer => {
+                    const option = document.createElement('option');
+                    option.value = customer.name;
+                    option.text = customer.name;
+                    customerSelect.add(option);
 
-                createCustomerSection(customer.name, customer.contact);
-            });
+                    createCustomerSection(customer.name, customer.contact);
+                });
+
+                loadRecords();
+            } catch (error) {
+                console.error('Error loading customers:', error);
+                alert('Failed to load customers.');
+            }
+        }
+
+        function loadRecords() {
+            try {
+                const allRecords = JSON.parse(localStorage.getItem('udharRecords')) || {};
+
+                for (const customer in allRecords) {
+                    if (allRecords.hasOwnProperty(customer)) {
+                        allRecords[customer].forEach(record => {
+                            appendRecordToCustomerList(customer, record);
+                        });
+                        updateTotalAmount(customer);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading records:', error);
+                alert('Failed to load records.');
+            }
         }
 
         function createCustomerSection(customerName, contactNumber) {
-            const customerSection = document.createElement('div');
-            customerSection.classList.add('record-list');
-            customerSection.id = customerName + '-section';
+            const customerSections = document.getElementById('customer-sections');
+            const section = document.createElement('div');
+            section.classList.add('record-list');
+            section.innerHTML = `
+                <h3>
+                    ${customerName}
+                    <span class="${contactNumber === 'Not Available' ? 'not-available' : 'phone-number'}">(${contactNumber})</span>
+                    <button class="call-button ${contactNumber && contactNumber !== 'Not Available' ? '' : 'disabled'}">
+                        <a href="${contactNumber && contactNumber !== 'Not Available' ? `tel:${contactNumber}` : '#'}">Call</a>
+                    </button>
+                    <button class="remove-button" onclick="removeCustomer('${customerName}')">Remove</button>
+                </h3>
+                <ul id="${customerName}-records" class="hidden"></ul>
+                <p id="${customerName}-total" class="total-amount hidden">Total Amount: ₹0</p>
+            `;
+            section.addEventListener('click', () => toggleDetails(customerName));
+            customerSections.appendChild(section);
+        }
 
-            const title = document.createElement('h3');
-            title.innerHTML = `${customerName} <span class="phone-number ${contactNumber === 'Not Available' ? 'not-available' : ''}">${contactNumber}</span>`;
-            customerSection.appendChild(title);
+        function appendRecordToCustomerList(customer, record) {
+            const recordList = document.getElementById(`${customer}-records`);
+            const recordItem = document.createElement('li');
+            recordItem.textContent = `${record.type === 'borrow' ? 'Borrowed' : 'Paid'}: ₹${record.amount.toFixed(2)} on ${record.date}`;
+            recordList.appendChild(recordItem);
+        }
 
-            const recordList = document.createElement('ul');
-            recordList.id = customerName + '-list';
-            customerSection.appendChild(recordList);
+        function updateTotalAmount(customer) {
+            const allRecords = JSON.parse(localStorage.getItem('udharRecords')) || {};
+            const customerRecords = allRecords[customer] || [];
+            const totalAmount = customerRecords.reduce((total, record) => {
+                return record.type === 'borrow' ? total + record.amount : total - record.amount;
+            }, 0);
+            const totalAmountElement = document.getElementById(`${customer}-total`);
+            totalAmountElement.textContent = `Total Amount: ₹${totalAmount.toFixed(2)}`;
+            if (totalAmount < 0) {
+                totalAmountElement.textContent += ' (Paid in Advance)';
+            }
+        }
 
-            const totalAmount = document.createElement('p');
-            totalAmount.classList.add('total-amount');
-            totalAmount.id = customerName + '-total';
-            totalAmount.innerText = 'Total: ₹0.00';
-            customerSection.appendChild(totalAmount);
+        function removeCustomer(customer) {
+            if (confirm(`Are you sure you want to remove ${customer}?`)) {
+                try {
+                    let customers = JSON.parse(localStorage.getItem('customers')) || [];
+                    customers = customers.filter(c => c.name !== customer);
+                    localStorage.setItem('customers', JSON.stringify(customers));
 
-            document.getElementById('customer-sections').appendChild(customerSection);
+                    let allRecords = JSON.parse(localStorage.getItem('udharRecords')) || {};
+                    delete allRecords[customer];
+                    localStorage.setItem('udharRecords', JSON.stringify(allRecords));
 
-            let allRecords = JSON.parse(localStorage.getItem('udharRecords')) || {};
-            if (allRecords[customerName]) {
-                allRecords[customerName].forEach((record, index) => {
-                    appendRecordToCustomerList(customerName, record);
-                });
-                updateTotalAmount(customerName);
+                    document.getElementById(`${customer}-records`).parentElement.remove();
+                    const customerSelect = document.getElementById('customer-select');
+                    for (let i = 0; i < customerSelect.options.length; i++) {
+                        if (customerSelect.options[i].value === customer) {
+                            customerSelect.remove(i);
+                            break;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error removing customer:', error);
+                    alert('Failed to remove customer.');
+                }
+            }
+        }
+
+        function toggleDetails(customer) {
+            const recordList = document.getElementById(`${customer}-records`);
+            const totalAmountElement = document.getElementById(`${customer}-total`);
+            if (recordList.classList.contains('hidden')) {
+                recordList.classList.remove('hidden');
+                totalAmountElement.classList.remove('hidden');
+            } else {
+                recordList.classList.add('hidden');
+                totalAmountElement.classList.add('hidden');
             }
         }
     </script>
