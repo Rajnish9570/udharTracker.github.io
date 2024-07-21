@@ -132,6 +132,9 @@
         }
         .not-available {
             color: lightgrey;
+            font-size: 16px;
+            Font-weight:600px
+            
         }
         .hidden {
             display: none;
@@ -197,7 +200,7 @@
             if (newCustomer) {
                 let customers = JSON.parse(localStorage.getItem('customers')) || [];
                 if (!customers.some(c => c.name === newCustomer)) {
-                    customers.push({ name: newCustomer, contact: contactNumber || 'Not Available' });
+                    customers.push({ name: newCustomer, contact: contactNumber || 'not Added contact no.' });
                     localStorage.setItem('customers', JSON.stringify(customers));
 
                     const customerSelect = document.getElementById('customer-select');
