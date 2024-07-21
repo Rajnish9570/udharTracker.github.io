@@ -129,11 +129,13 @@
         }
         .phone-number {
             color: blue;
+            font-size:12px;
+            font-weight:700;
         }
         .not-available {
             color: lightgrey;
-            font-size:16px;
-            font-weight:600px;
+            font-size:12px;
+            font-weight:700;
         }
         .hidden {
             display: none;
@@ -199,7 +201,7 @@
             if (newCustomer) {
                 let customers = JSON.parse(localStorage.getItem('customers')) || [];
                 if (!customers.some(c => c.name === newCustomer)) {
-                    customers.push({ name: newCustomer, contact: contactNumber || 'Not added contact no.' });
+                    customers.push({ name: newCustomer, contact: contactNumber || 'Not Available' });
                     localStorage.setItem('customers', JSON.stringify(customers));
 
                     const customerSelect = document.getElementById('customer-select');
@@ -208,7 +210,7 @@
                     option.text = newCustomer;
                     customerSelect.add(option);
 
-                    createCustomerSection(newCustomer, contactNumber || 'Not added contact no.');
+                    createCustomerSection(newCustomer, contactNumber || 'Not Available');
 
                     document.getElementById('new-customer').value = '';
                     document.getElementById('customer-contact').value = '';
@@ -313,7 +315,7 @@
                 <h3>
                     ${customerName}
                     <span class="${contactNumber === 'Not Available' ? 'not-available' : 'phone-number'}">(${contactNumber})</span>
-                    <button class="call-button ${contactNumber && contactNumber !== 'Not added contact no. ' ? '' : 'disabled'}">
+                    <button class="call-button ${contactNumber && contactNumber !== 'Not Available' ? '' : 'disabled'}">
                         <a href="${contactNumber && contactNumber !== 'Not Available' ? `tel:${contactNumber}` : '#'}">Call</a>
                     </button>
                     <button class="remove-button" onclick="removeCustomer('${customerName}')">Remove</button>
@@ -384,4 +386,4 @@
         }
     </script>
 </body>
-</html> 
+</html>
