@@ -12,9 +12,9 @@
             background-color: #fff;
             color: #333;
         }
-    p{
-     text-align: center;
-    }
+        p{
+            text-align: center;
+        }
         h2 {
             text-align: center;
             color: #1a202c;
@@ -129,15 +129,14 @@
         }
         .phone-number {
             color: blue;
-            font-size:16px;
-            font-weight:700;
         }
         .not-available {
             color: lightgrey;
-            font-size:16px;
-            font-weight:700;
         }
         .hidden {
+            display: none;
+        }
+        .hidden-remove-button {
             display: none;
         }
         @media (max-width: 600px) {
@@ -307,6 +306,13 @@
             }
         }
 
+        function appendRecordToCustomerList(customer, record) {
+            const recordList = document.getElementById(`${customer}-records`);
+            const recordItem = document.createElement('li');
+            recordItem.textContent = `${record.date} - ${record.type === 'borrow' ? 'Borrowed' : 'Paid'}: ₹${record.amount.toFixed(2)}`;
+            recordList.appendChild(recordItem);
+        }
+
         function createCustomerSection(customerName, contactNumber) {
             const customerSections = document.getElementById('customer-sections');
             const section = document.createElement('div');
@@ -318,20 +324,13 @@
                     <button class="call-button ${contactNumber && contactNumber !== 'Not Available' ? '' : 'disabled'}">
                         <a href="${contactNumber && contactNumber !== 'Not Available' ? `tel:${contactNumber}` : '#'}">Call</a>
                     </button>
-                    <button class="remove-button" onclick="removeCustomer('${customerName}')">Remove</button>
+                    <button class="remove-button hidden-remove-button" onclick="removeCustomer('${customerName}')">Remove</button>
                 </h3>
                 <ul id="${customerName}-records" class="hidden"></ul>
-                <p id="${customerName}-total" class="total-amount hidden">Total Amount: ₹0</p>
+                <p id="${customerName}-total" class="total-amount hidden">Total Amount: ₹0.00</p>
             `;
             section.addEventListener('click', () => toggleDetails(customerName));
             customerSections.appendChild(section);
-        }
-
-        function appendRecordToCustomerList(customer, record) {
-            const recordList = document.getElementById(`${customer}-records`);
-            const recordItem = document.createElement('li');
-            recordItem.textContent = `${record.type === 'borrow' ? 'Borrowed' : 'Paid'}: ₹${record.amount.toFixed(2)} on ${record.date}`;
-            recordList.appendChild(recordItem);
         }
 
         function updateTotalAmount(customer) {
@@ -345,43 +344,44 @@
             if (totalAmount < 0) {
                 totalAmountElement.textContent += ' (Paid in Advance)';
             }
-        }
 
-        function removeCustomer(customer) {
-            if (confirm(`Are you sure you want to remove ${customer}?`)) {
-                try {
-                    let customers = JSON.parse(localStorage.getItem('customers')) || [];
-                    customers = customers.filter(c => c.name !== customer);
-                    localStorage.setItem('customers', JSON.stringify(customers));
-
-                    let allRecords = JSON.parse(localStorage.getItem('udharRecords')) || {};
-                    delete allRecords[customer];
-                    localStorage.setItem('udharRecords', JSON.stringify(allRecords));
-
-                    document.getElementById(`${customer}-records`).parentElement.remove();
-                    const customerSelect = document.getElementById('customer-select');
-                    for (let i = 0; i < customerSelect.options.length; i++) {
-                        if (customerSelect.options[i].value === customer) {
-                            customerSelect.remove(i);
-                            break;
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error removing customer:', error);
-                    alert('Failed to remove customer.');
-                }
+            const removeButton = totalAmountElement.parentElement.querySelector('.remove-button');
+            if (totalAmount.toFixed(2) === '0.00') {
+                removeButton.classList.remove('hidden-remove-button');
+            } else {
+                removeButton.classList.add('hidden-remove-button');
             }
         }
 
         function toggleDetails(customer) {
             const recordList = document.getElementById(`${customer}-records`);
             const totalAmountElement = document.getElementById(`${customer}-total`);
-            if (recordList.classList.contains('hidden')) {
-                recordList.classList.remove('hidden');
-                totalAmountElement.classList.remove('hidden');
-            } else {
-                recordList.classList.add('hidden');
-                totalAmountElement.classList.add('hidden');
+
+            recordList.classList.toggle('hidden');
+            totalAmountElement.classList.toggle('hidden');
+        }
+
+        function removeCustomer(customerName) {
+            if (confirm(`Are you sure you want to remove ${customerName}?`)) {
+                let customers = JSON.parse(localStorage.getItem('customers')) || [];
+                customers = customers.filter(customer => customer.name !== customerName);
+                localStorage.setItem('customers', JSON.stringify(customers));
+
+                const allRecords = JSON.parse(localStorage.getItem('udharRecords')) || {};
+                delete allRecords[customerName];
+                localStorage.setItem('udharRecords', JSON.stringify(allRecords));
+
+                const customerSections = document.getElementById('customer-sections');
+                const section = document.getElementById(`${customerName}-records`).parentElement;
+                customerSections.removeChild(section);
+
+                const customerSelect = document.getElementById('customer-select');
+                for (let i = 0; i < customerSelect.options.length; i++) {
+                    if (customerSelect.options[i].value === customerName) {
+                        customerSelect.remove(i);
+                        break;
+                    }
+                }
             }
         }
     </script>
