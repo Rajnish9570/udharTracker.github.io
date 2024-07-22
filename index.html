@@ -336,7 +336,7 @@
         function appendRecordToCustomerList(customer, record) {
             const recordList = document.getElementById(`${customer}-records`);
             const recordItem = document.createElement('li');
-            recordItem.textContent = `${record.date} - ${record.type === 'borrow' ? 'Borrowed' : 'Paid'}: ₹${record.amount.toFixed(2)}`;
+            recordItem.textContent = `${record.date} - ${record.type === 'borrow' ? 'Borrowed' : 'Paid'}:₹${record.amount.toFixed(2)}`;
             recordList.appendChild(recordItem);
         }
 
