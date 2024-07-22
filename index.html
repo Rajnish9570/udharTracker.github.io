@@ -105,6 +105,10 @@
             border-radius: 3px;
             transition: transform 0.2s;
         }
+        .title{
+            color:blue;
+            font-weight:900;
+        }
         .remove-button:hover {
             transform: translateY(-3px);
         }
@@ -177,14 +181,14 @@
 
     <div class="form-container">
         <div class="customer-form">
-            <p>Add Customers</p>
+            <p class="title">Add Customers</p>
             <input type="text" id="new-customer" placeholder="New Customer Name">
             <input type="text" id="customer-contact" placeholder="Contact Number">
             <button onclick="addCustomer()">Add Customer</button>
         </div>
     
         <div class="record-form">
-            <p>Add Records</p>
+            <p class="title">Add Records</p>
             <select id="customer-select">
                 <option value="">Select Customer</option>
             </select>
