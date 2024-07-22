@@ -177,13 +177,12 @@
             position: fixed;
             bottom: 0;
             left: 0;
-            
             background-color:none;
-            color: green;
-            text-align: right;
+            color: white;
             padding: 10px;
             font-size: 12px;
             font-weight: bold;
+            text-align: right;
         }
     </style>
 </head>
@@ -212,7 +211,7 @@
     <div id="customer-sections"></div>
 
     <div id="grand-total" class="grand-total">
-        Total उधार: ₹0.00 
+        Grand Total: ₹0.00
     </div>
 
     <script>
@@ -336,7 +335,7 @@
         function appendRecordToCustomerList(customer, record) {
             const recordList = document.getElementById(`${customer}-records`);
             const recordItem = document.createElement('li');
-            recordItem.textContent = `${record.date} - ${record.type === 'borrow' ? 'Borrowed' : 'Paid'}:₹${record.amount.toFixed(2)}`;
+            recordItem.textContent = `${record.date} - ${record.type === 'borrow' ? 'Borrowed' : 'Paid'}: ₹${record.amount.toFixed(2)}`;
             recordList.appendChild(recordItem);
         }
 
@@ -367,7 +366,7 @@
                 return record.type === 'borrow' ? total + record.amount : total - record.amount;
             }, 0);
             const totalAmountElement = document.getElementById(`${customer}-total`);
-            totalAmountElement.textContent = `Total Amount: ₹$ {totalAmount.toFixed(2)}`;
+            totalAmountElement.textContent = `Total Amount: ₹${totalAmount.toFixed(2)}`;
             if (totalAmount < 0) {
                 totalAmountElement.textContent += ' (Paid in Advance)';
             }
@@ -423,7 +422,7 @@
                     return record.type === 'borrow' ? customerTotal + record.amount : customerTotal - record.amount;
                 }, 0);
             }, 0);
-            document.getElementById('grand-total').textContent = ` Total उधार: ₹${grandTotal.toFixed(2)}`;
+            document.getElementById('grand-total').textContent = `Grand Total: ₹${grandTotal.toFixed(2)}`;
         }
     </script>
 </body>
