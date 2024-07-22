@@ -12,7 +12,7 @@
             background-color: #fff;
             color: #333;
         }
-        p{
+        p {
             text-align: center;
         }
         h2 {
@@ -105,9 +105,9 @@
             border-radius: 3px;
             transition: transform 0.2s;
         }
-        .title{
-            color:blue;
-            font-weight:900;
+        .title {
+            color: blue;
+            font-weight: 900;
         }
         .remove-button:hover {
             transform: translateY(-3px);
@@ -133,13 +133,13 @@
         }
         .phone-number {
             color: blue;
-            font-weight:700;
-            font-size:15px;
+            font-weight: 700;
+            font-size: 15px;
         }
         .not-available {
             color: lightgrey;
-            font-weight:700;
-            font-size:15px;
+            font-weight: 700;
+            font-size: 15px;
         }
         .hidden {
             display: none;
@@ -173,6 +173,18 @@
                 width: 95%;
             }
         }
+        .grand-total {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #007bff;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            font-size: 16px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -198,6 +210,10 @@
         </div>
     </div>
     <div id="customer-sections"></div>
+
+    <div id="grand-total" class="grand-total">
+        Grand Total: ₹0.00
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -362,6 +378,8 @@
             } else {
                 removeButton.classList.add('hidden-remove-button');
             }
+
+            updateGrandTotal();
         }
 
         function toggleDetails(customer) {
@@ -393,7 +411,19 @@
                         break;
                     }
                 }
+
+                updateGrandTotal();
             }
+        }
+
+        function updateGrandTotal() {
+            const allRecords = JSON.parse(localStorage.getItem('udharRecords')) || {};
+            const grandTotal = Object.values(allRecords).reduce((total, records) => {
+                return total + records.reduce((customerTotal, record) => {
+                    return record.type === 'borrow' ? customerTotal + record.amount : customerTotal - record.amount;
+                }, 0);
+            }, 0);
+            document.getElementById('grand-total').textContent = `Grand Total: ₹${grandTotal.toFixed(2)}`;
         }
     </script>
 </body>
