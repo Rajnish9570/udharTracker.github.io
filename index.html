@@ -367,7 +367,7 @@
                 return record.type === 'borrow' ? total + record.amount : total - record.amount;
             }, 0);
             const totalAmountElement = document.getElementById(`${customer}-total`);
-            totalAmountElement.textContent = `Total Amount: ₹${totalAmount.toFixed(2)}`;
+            totalAmountElement.textContent = `Total Amount: ₹$ {totalAmount.toFixed(2)}`;
             if (totalAmount < 0) {
                 totalAmountElement.textContent += ' (Paid in Advance)';
             }
